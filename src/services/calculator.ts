@@ -26,6 +26,10 @@ export function calculate(input: CalculatorInput): CalculatorResult {
         message = `Operator ${operator} is not supported`;
     }
     return {
-        
+        ...input,
+        id: Math.floor(Math.random() * 1000000).toString(),
+        result,
+        message,
+        timestamp: Date.now(),
     }
 }

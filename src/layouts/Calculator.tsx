@@ -1,28 +1,29 @@
 import { useRef, useState } from "react";
 import Button from "../components/Button";
 import Display from "../components/Display";
-import { Key } from "../types";
+import { CalculatorInput, Key } from "../types";
 import { ButtonProps } from "../components/Button";
+import { calculate } from "../services";
 
 const keys: Key[] = [
     Key.CE,
     Key.C,
     Key.BACKSPACE,
     Key.DIVIDE,
-    Key.MULTIPLY,
-    Key.NINE,
-    Key.EIGHT,
     Key.SEVEN,
-    Key.SIX,
-    Key.FIVE,
+    Key.EIGHT,
+    Key.NINE,
+    Key.MULTIPLY,
     Key.FOUR,
-    Key.THREE,
-    Key.TWO,
-    Key.ONE,
-    Key.ZERO,
+    Key.FIVE,
+    Key.SIX,
     Key.MINUS,
+    Key.ONE,
+    Key.TWO,
+    Key.THREE,
     Key.PLUS,
     Key.PLUS_MINUS,
+    Key.ZERO,
     Key.DOT,
     Key.EQUAL,
 ];
@@ -50,21 +51,23 @@ enum CalculatorState {
 }
 
 const operatorRegex = new RegExp(
-    `^[${Key.MINUS}${Key.PLUS}${Key.MULTIPLY}${Key.DIVIDE}]{1}$`
+    `[${Key.MINUS}${Key.PLUS}${Key.MULTIPLY}${Key.DIVIDE}]`
 );
 
 function getUpdatedOperand(currentInput: string, key: string) {
     if (key >= Key.ZERO && key <= Key.NINE) {
         return currentInput === Key.ZERO ||
         currentInput === `${Key.NEGATIVE}${Key.ZERO}`
-        ? currentInput.slice(0,-1).concat(key) : currentInput.concat(key);
+        ? currentInput.slice(0,-1).concat(key)
+        : currentInput.concat(key);
     } else if (key === Key.DOT) {
         if (!currentInput.includes(Key.DOT)) {
             return currentInput.concat(Key.DOT);
         }
     } else if (key === Key.PLUS_MINUS) {
         return currentInput.startsWith(Key.NEGATIVE)
-        ? currentInput.slice(1) : Key.NEGATIVE.concat(currentInput);
+        ? currentInput.slice(1)
+        : Key.NEGATIVE.concat(currentInput);
     } else if (key === Key.BACKSPACE) {
         const lastCharRemoved = currentInput.slice(0,-1);
         return lastCharRemoved === Key.NEGATIVE || lastCharRemoved
@@ -76,12 +79,19 @@ function getUpdatedOperand(currentInput: string, key: string) {
     return currentInput;
 }
 
+function toCalculatorInput(expression: string): CalculatorInput {
+    const elements = expression.split(' ');
+        return {
+            operand1: Number(elements[0]),
+            operator: elements[1] as CalculatorInput['operator'],
+            operand2: Number(elements[2]),
+        }
+}
+
 export default function Calculator() {
     const [expression, setExpression] = useState<string>('0');
     const [currentInput, setCurrentInput] = useState<string>(Key.ZERO);
-    const calculatorState = useRef<CalculatorState>(CalculatorState.OPERAND1);
-    calculatorState.current = CalculatorState.OPERAND2;
-
+    let calculatorState = useRef<CalculatorState>(CalculatorState.OPERAND1);
 
     function handleKeyPress(key: string) {
         console.log(`${key} is pressed`);
@@ -93,8 +103,9 @@ export default function Calculator() {
         function setResult() {
             const fullExpression = expression.concat(`${currentInput} ${Key.EQUAL}`);
             setExpression(fullExpression);
-            // TODO: ADD CALC LOGIC
-            setCurrentInput('Result');
+            const calculatorResult = calculate(toCalculatorInput(fullExpression));
+            console.log(calculatorResult);
+            setCurrentInput(calculatorResult.result?.toString() ?? 'Error');
             calculatorState.current = CalculatorState.RESULT;
         } 
         setCurrentInput((prevInput) => prevInput.concat(key));

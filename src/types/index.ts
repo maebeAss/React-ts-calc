@@ -1,3 +1,3 @@
-export * from './menu'
-export * from './key'
-export * from './calculator'
+export * from './menu';
+export * from './key';
+export * from './calculator';
